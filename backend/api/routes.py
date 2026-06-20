@@ -6,6 +6,7 @@ from services.llm_service import client
 from services.geo_service import identify_culprit_facility
 from services.rag_service import get_relevant_statutes
 from services.canopy_service import get_canopy_data
+from services.geo_service import get_coordinates, get_place_name
 import hashlib
 import json
 
@@ -120,3 +121,11 @@ def query_legal_database(request: RAGQueryRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/resolve-coordinates")
+def resolve_coordinates(place_name: str):
+    coords = get_coordinates(place_name)
+    if not coords:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return coords
