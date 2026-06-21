@@ -14,7 +14,8 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 
-@app.api_route("/", methods=["GET", "HEAD"])
+@app.get("/")
+@app.head("/")
 def read_root():
     return {"status": "TerraTruth API is online."}
 
