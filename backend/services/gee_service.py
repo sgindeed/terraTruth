@@ -23,7 +23,16 @@ def initialize_earth_engine():
             # Server Mode (Render) - Use the injected Service Account JSON
             key_dict = json.loads(EE_PRIVATE_KEY_JSON)
             credentials = service_account.Credentials.from_service_account_info(key_dict)
-            ee.Initialize(credentials, project=EE_PROJECT_ID)
+            
+            # Explicitly define the scopes required by Google Earth Engine
+            SCOPES = [
+                'https://www.googleapis.com/auth/earthengine',
+                'https://www.googleapis.com/auth/cloud-platform'
+            ]
+            scoped_credentials = credentials.with_scopes(SCOPES)
+            
+            # Initialize with the newly scoped credentials
+            ee.Initialize(scoped_credentials, project=EE_PROJECT_ID)
             print("Earth Engine initialized successfully via Service Account.")
         else:
             # Local Development Mode - Use local cached credentials
