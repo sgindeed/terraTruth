@@ -9,7 +9,7 @@ export default function App() {
   const [scanMode, setScanMode] = useState("multivariate"); 
   const [isChatOpen, setIsChatOpen] = useState(false); 
   const [showAnomalies, setShowAnomalies] = useState(false);
-  const [showAllEvents, setShowAllEvents] = useState(false); // NEW: State for All Events Modal
+  const [showAllEvents, setShowAllEvents] = useState(false);
   
   const [data, setData] = useState(null);
   const [canopyData, setCanopyData] = useState(null);
@@ -21,6 +21,9 @@ export default function App() {
   const [locationInput, setLocationInput] = useState("");
   
   const [displayLocation, setDisplayLocation] = useState({ name: "", coords: "" });
+
+  // Your live Render Backend URL
+  const API_BASE_URL = "https://terratruth.onrender.com/api";
 
   const handleGetCurrentLocation = () => {
     if ("geolocation" in navigator) {
@@ -54,7 +57,7 @@ export default function App() {
         setLat(targetLat);
         setLon(targetLon);
 
-        const res = await fetch(`http://localhost:8000/api/reverse-geocode?lat=${targetLat}&lon=${targetLon}`);
+        const res = await fetch(`${API_BASE_URL}/reverse-geocode?lat=${targetLat}&lon=${targetLon}`);
         if (res.ok) {
           const locData = await res.json();
           targetName = locData.name;
@@ -63,7 +66,7 @@ export default function App() {
         }
 
       } else if (locationInput) {
-        const res = await fetch(`http://localhost:8000/api/resolve-coordinates?place_name=${locationInput}`, { method: 'POST' });
+        const res = await fetch(`${API_BASE_URL}/resolve-coordinates?place_name=${locationInput}`, { method: 'POST' });
         if (!res.ok) throw new Error("Could not resolve location name.");
         
         const loc = await res.json();
@@ -73,7 +76,7 @@ export default function App() {
         setLon(targetLon);
         targetName = locationInput.toUpperCase();
       } else {
-        const res = await fetch(`http://localhost:8000/api/reverse-geocode?lat=${targetLat}&lon=${targetLon}`);
+        const res = await fetch(`${API_BASE_URL}/reverse-geocode?lat=${targetLat}&lon=${targetLon}`);
         if (res.ok) {
           const locData = await res.json();
           targetName = locData.name;
@@ -98,15 +101,15 @@ export default function App() {
   const initiateScan = async (finalLat, finalLon) => {
     setIsChatOpen(false); 
     setShowAnomalies(false);
-    setShowAllEvents(false); // Close modal on new scan
+    setShowAllEvents(false);
     
     if (scanMode === "multivariate") setData(null);
     if (scanMode === "canopy") setCanopyData(null);
     
     try {
       const endpoint = scanMode === "multivariate" 
-        ? "http://localhost:8000/api/analyze-location"
-        : "http://localhost:8000/api/analyze-canopy";
+        ? `${API_BASE_URL}/analyze-location`
+        : `${API_BASE_URL}/analyze-canopy`;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -144,7 +147,6 @@ export default function App() {
     ? (data?.anomalies || (data?.timeseries ? data.timeseries.filter(t => t.is_anomaly) : []))
     : [];
 
-  // NEW: List of all events for the new modal
   const allEventsList = scanMode === "multivariate" 
     ? (data?.timeseries || []) 
     : (canopyData?.timeseries_sar || []);
@@ -162,7 +164,7 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3 font-mono text-xs text-[#888]">
           <span className={`w-2 h-2 rounded-full ${loading ? 'bg-[#ffaa00] animate-pulse' : 'bg-[#00e5ff]'}`}></span>
-          {loading ? "PROCESSING TELEMETRY" : "SYSTEM READY"}
+          {loading ? "DEPLOYING AGENT SWARM" : "SYSTEM READY"}
         </div>
       </header>
 
@@ -218,7 +220,6 @@ export default function App() {
 
           <div className="grid grid-cols-2 gap-4">
             
-            {/* NEW: CLICKABLE TOTAL EVENTS CARD */}
             <div 
               onClick={() => currentEvents > 0 && setShowAllEvents(true)}
               className={`bg-[#111] border rounded-xl p-4 flex flex-col justify-between h-28 transition-all shadow-lg ${currentEvents > 0 ? 'border-[#00e5ff]/40 cursor-pointer hover:bg-[#00e5ff]/10 shadow-[0_0_15px_rgba(0,229,255,0.05)]' : 'border-[#222]'}`}
@@ -232,7 +233,6 @@ export default function App() {
               </p>
             </div>
 
-            {/* EXISTING CLICKABLE ANOMALIES CARD */}
             <div 
               onClick={() => currentAnomalies > 0 && setShowAnomalies(true)}
               className={`bg-[#111] border rounded-xl p-4 flex flex-col justify-between h-28 transition-all shadow-lg ${currentAnomalies > 0 ? 'border-[#ff2a2a]/40 shadow-[0_0_15px_rgba(255,42,42,0.05)] cursor-pointer hover:bg-[#ff2a2a]/10' : 'border-[#222]'}`}
@@ -277,7 +277,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* NEW: ALL EVENTS MODAL */}
+      {/* ALL EVENTS MODAL */}
       {showAllEvents && (
         <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#0a0a0a] border border-[#00e5ff]/30 rounded-xl w-full max-w-4xl overflow-hidden shadow-[0_0_50px_rgba(0,229,255,0.15)] flex flex-col max-h-[80vh]">
@@ -344,7 +344,7 @@ export default function App() {
         </div>
       )}
 
-      {/* EXISTING: FORENSIC ANOMALY MODAL */}
+      {/* FORENSIC ANOMALY MODAL */}
       {showAnomalies && (
         <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-[#0a0a0a] border border-[#ff2a2a]/30 rounded-xl w-full max-w-3xl overflow-hidden shadow-[0_0_50px_rgba(255,42,42,0.15)] flex flex-col max-h-[80vh]">
