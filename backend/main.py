@@ -14,10 +14,9 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {"status": "TerraTruth API is online."}
-
 
 if __name__ == "__main__":
     import uvicorn
