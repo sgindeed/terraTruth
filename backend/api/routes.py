@@ -125,7 +125,18 @@ def query_legal_database(request: RAGQueryRequest):
 
 @router.post("/resolve-coordinates")
 def resolve_coordinates(place_name: str):
+    """Forward geocoding: Place Name -> Lat/Lon"""
     coords = get_coordinates(place_name)
     if not coords:
         raise HTTPException(status_code=404, detail="Location not found")
     return coords
+
+
+@router.get("/reverse-geocode")
+def reverse_geocode(lat: float, lon: float):
+    """Reverse geocoding: Lat/Lon -> Place Name."""
+    try:
+        name = get_place_name(lat, lon)
+        return {"name": name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
