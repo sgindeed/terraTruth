@@ -1,24 +1,41 @@
 import ee
 import pandas as pd
 import os
+import json
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from google.oauth2 import service_account
 
 # Load environment variables from the .env file
 load_dotenv()
 
-# Fetch the Project ID securely from the environment
+# Fetch variables securely from the environment
 EE_PROJECT_ID = os.getenv("EE_PROJECT_ID")
+EE_PRIVATE_KEY_JSON = os.getenv("EE_PRIVATE_KEY_JSON")
 
-try:
-    if not EE_PROJECT_ID:
-        raise ValueError("EE_PROJECT_ID is not set in the .env file. Please add it.")
-        
-    # Explicitly pass the project ID here
-    ee.Initialize(project=EE_PROJECT_ID)
-    print("Earth Engine initialized successfully!")
-except Exception as e:
-    print(f"Earth Engine initialization failed. Reason: {e}")
+def initialize_earth_engine():
+    """Initializes GEE using a Service Account on Render, or local auth as a fallback."""
+    try:
+        if not EE_PROJECT_ID:
+            raise ValueError("EE_PROJECT_ID is not set. Please add it to .env or Render variables.")
+            
+        if EE_PRIVATE_KEY_JSON:
+            # Server Mode (Render) - Use the injected Service Account JSON
+            key_dict = json.loads(EE_PRIVATE_KEY_JSON)
+            credentials = service_account.Credentials.from_service_account_info(key_dict)
+            ee.Initialize(credentials, project=EE_PROJECT_ID)
+            print("Earth Engine initialized successfully via Service Account.")
+        else:
+            # Local Development Mode - Use local cached credentials
+            ee.Initialize(project=EE_PROJECT_ID)
+            print("Earth Engine initialized successfully via Local Credentials.")
+            
+    except Exception as e:
+        print(f"CRITICAL: Earth Engine Initialization Failed. Reason: {e}")
+
+# Call initialization when this module loads
+initialize_earth_engine()
+
 
 def get_gee_data(lat: float, lon: float, days_back: int = 30) -> pd.DataFrame:
     """Extracts and fuses Sentinel-5P, MODIS LST, and MODIS AOD dynamically."""
