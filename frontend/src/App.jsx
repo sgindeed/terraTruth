@@ -164,7 +164,7 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3 font-mono text-xs text-[#888]">
           <span className={`w-2 h-2 rounded-full ${loading ? 'bg-[#ffaa00] animate-pulse' : 'bg-[#00e5ff]'}`}></span>
-          {loading ? "DEPLOYING AGENT SWARM" : "SYSTEM READY"}
+          {loading ? "DEPLOYING" : "SYSTEM READY"}
         </div>
       </header>
 
