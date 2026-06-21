@@ -8,3 +8,4 @@ pydantic
 earthengine-api
 chromadb 
 requests
+google-auth
